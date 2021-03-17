@@ -1,4 +1,4 @@
-export default function isReadyProperty({ types: t, template }) {
+export default function isReadyProperty({ types: t, template }, { noWebpack }) {
   const statements = template.ast(`
     const key=this.resolve(props)
     if (this.resolved[key] !== true) {
@@ -17,6 +17,8 @@ export default function isReadyProperty({ types: t, template }) {
       'method',
       t.identifier('isReady'),
       [t.identifier('props')],
-      t.blockStatement(statements),
+      t.blockStatement(
+        noWebpack ? [t.returnStatement(t.booleanLiteral(true))] : statements,
+      ),
     )
 }

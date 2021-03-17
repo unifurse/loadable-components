@@ -1,4 +1,9 @@
-export default function requireSyncProperty({ types: t, template }) {
+import { getCallValue } from '../util'
+
+export default function requireSyncProperty(
+  { types: t, template },
+  { noWebpack },
+) {
   const statements = template.ast(`
     const id = this.resolve(props)
 
@@ -9,11 +14,25 @@ export default function requireSyncProperty({ types: t, template }) {
     return eval('module.require')(id)
   `)
 
-  return () =>
+  return ({ callPath }) => {
     t.objectMethod(
       'method',
       t.identifier('requireSync'),
       [t.identifier('props')],
-      t.blockStatement(statements),
+      t.blockStatement(
+        noWebpack
+          ? [
+              t.returnStatement(
+                t.memberExpression(
+                  t.callExpression(t.identifier('require'), [
+                    getCallValue(t, callPath),
+                  ]),
+                  t.identifier('default'),
+                ),
+              ),
+            ]
+          : statements,
+      ),
     )
+  }
 }

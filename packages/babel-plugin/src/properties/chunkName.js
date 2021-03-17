@@ -20,7 +20,7 @@ function readWebpackCommentValues(str) {
 function writeWebpackCommentValues(values) {
   try {
     const str = Object.keys(values)
-      .map(key => `${key}: ${JSON.stringify(values[key])}`)
+      .map((key) => `${key}: ${JSON.stringify(values[key])}`)
       .join(', ')
     return ` ${str} `
   } catch (e) {
@@ -34,7 +34,7 @@ function getChunkNameComment(importArg) {
   if (!importArg.has('leadingComments')) return null
   return importArg
     .get('leadingComments')
-    .find(comment => comment.node.value.match(WEBPACK_CHUNK_NAME_REGEXP))
+    .find((comment) => comment.node.value.match(WEBPACK_CHUNK_NAME_REGEXP))
 }
 
 function getRawChunkNameFromCommments(importArg) {
@@ -58,7 +58,7 @@ function replaceQuasi(str, stripLeftHyphen) {
   return result.replace(MATCH_LEFT_HYPHENS_REPLACE_REGEX, '')
 }
 
-export default function chunkNameProperty({ types: t }) {
+export default function chunkNameProperty({ types: t }, { noWebpack }) {
   function transformQuasi(quasi, first, single) {
     return t.templateElement(
       {
@@ -181,13 +181,15 @@ export default function chunkNameProperty({ types: t }) {
   }
 
   return ({ callPath, funcPath }) => {
-    const chunkName = replaceChunkName(callPath)
-
     return t.objectMethod(
       'method',
       t.identifier('chunkName'),
       funcPath.node.params,
-      t.blockStatement([t.returnStatement(chunkName)]),
+      t.blockStatement(
+        noWebpack
+          ? [t.returnStatement(t.nullLiteral())]
+          : [t.returnStatement(replaceChunkName(callPath))],
+      ),
     )
   }
 }

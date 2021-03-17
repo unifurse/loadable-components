@@ -19,7 +19,7 @@ const properties = [
 
 const LOADABLE_COMMENT = '#__LOADABLE__'
 
-const loadablePlugin = api => {
+const loadablePlugin = (api, options) => {
   const { types: t } = api
 
   function collectImportCallPaths(startPath) {
@@ -32,7 +32,7 @@ const loadablePlugin = api => {
     return imports
   }
 
-  const propertyFactories = properties.map(init => init(api))
+  const propertyFactories = properties.map((init) => init(api, options))
 
   function isValidIdentifier(path) {
     // `loadable()`
@@ -92,7 +92,7 @@ const loadablePlugin = api => {
     funcPath.node.params = funcPath.node.params || []
 
     const object = t.objectExpression(
-      propertyFactories.map(getProperty =>
+      propertyFactories.map((getProperty) =>
         getProperty({ path, callPath, funcPath }),
       ),
     )
@@ -116,7 +116,9 @@ const loadablePlugin = api => {
               if (!isValidIdentifier(path)) return
               transformImport(path)
             },
-            'ArrowFunctionExpression|FunctionExpression|ObjectMethod': path => {
+            'ArrowFunctionExpression|FunctionExpression|ObjectMethod': (
+              path,
+            ) => {
               if (!hasLoadableComment(path)) return
               transformImport(path)
             },
